@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body { font-family: Arial; padding: 20px; }
+input, select { width: 100%; margin: 5px 0; padding: 8px; }
+button { padding: 10px; width: 100%; background: green; color: white; border: none; }
+</style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Evaluasi Misdinar</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --primary: #c9a227;
+  --bg: #f5f6fa;
+  --card: #ffffff;
+}
+
+body {
+  font-family: 'Poppins', sans-serif;
+  background: var(--bg);
+  margin: 0;
+}
+
+/* HEADER */
+.header {
+  background: linear-gradient(135deg, #c9a227, #fff);
+  padding: 20px;
+  text-align: center;
+  color: #333;
+  font-weight: bold;
+  font-size: 20px;
+}
+
+/* CONTAINER */
+.container {
+  max-width: 480px;
+  margin: 20px auto;
+  padding: 15px;
+}
+
+/* CARD */
+.card {
+  background: var(--card);
+  border-radius: 16px;
+  padding: 15px;
+  margin-bottom: 15px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+/* INPUT */
+input, select {
+  width: 100%;
+  padding: 10px;
+  margin: 6px 0 10px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+}
+
+/* BUTTON */
+button {
+  border: none;
+  padding: 12px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.btn-add {
+  background: #1976d2;
+  color: white;
+  width: 100%;
+}
+
+.btn-submit {
+  background: var(--primary);
+  color: white;
+  width: 100%;
+  margin-top: 10px;
+}
+
+/* LITURGI INFO */
+.liturgi {
+  text-align: center;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+/* STATUS */
+.status {
+  text-align: center;
+  margin-top: 10px;
+  font-weight: bold;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+  ✝️ Evaluasi Misdinar
+</div>
+
+<div class="container">
+
+  <!-- TANGGAL -->
+  <div class="card">
+    <label>Tanggal</label>
+    <input type="date" id="tanggal">
+
+    <div id="liturgiInfo" class="liturgi"></div>
+  </div>
+
+  <!-- LIST PETUGAS -->
+  <div id="list"></div>
+
+  <button class="btn-add" onclick="tambah()">+ Tambah Petugas</button>
+
+  <button class="btn-submit" onclick="kirim()">Kirim Evaluasi</button>
+
+  <div id="status" class="status"></div>
+
+</div>
+
+<script>
+const URL = "https://script.google.com/macros/s/AKfycbzzSfDIrj7DzfKzpK0lZh6dCVwUEUm8k0dpTWlwm-3e6E6cJIYz7WEDTcqPxIb3xm_7/exec";
+
+const warnaMap = {
+  "Ungu": "#6a1b9a",
+  "Putih": "#c9a227",
+  "Hijau": "#2e7d32",
+  "Merah": "#c62828"
+};
+
+// ===== TAMBAH PETUGAS =====
+function tambah(){
+  const div=document.createElement("div");
+  div.className="card";
+
+  div.innerHTML=`
+    <input placeholder="Nama Petugas">
+    
+    <label>Disiplin</label>
+    <select>
+      <option>Baik</option>
+      <option>Cukup</option>
+      <option>Kurang</option>
+    </select>
+
+    <label>Sikap</label>
+    <select>
+      <option>Baik</option>
+      <option>Cukup</option>
+      <option>Kurang</option>
+    </select>
+
+    <input placeholder="Catatan">
+  `;
+
+  document.getElementById("list").appendChild(div);
+}
+
+// ===== AUTO LITURGI =====
+document.getElementById("tanggal").addEventListener("change", function(){
+  fetch(URL + "?tanggal=" + this.value)
+    .then(res=>res.json())
+    .then(data=>{
+      const info = document.getElementById("liturgiInfo");
+
+      info.innerHTML = `
+        <b>${data.misa}</b><br>
+        ${data.masa} - ${data.warna}
+      `;
+
+      document.querySelector(".header").style.background =
+        warnaMap[data.warna] || "#c9a227";
+    });
+});
+
+// ===== KIRIM =====
+function kirim(){
+  const cards=document.querySelectorAll(".card");
+  let petugas=[];
+
+  cards.forEach((c,i)=>{
+    if(i===0) return;
+
+    const input=c.querySelectorAll("input,select");
+
+    petugas.push({
+      nama: input[0].value,
+      disiplin: input[1].value,
+      sikap: input[2].value,
+      catatan: input[3].value
+    });
+  });
+
+  fetch(URL,{
+    method:"POST",
+    body:JSON.stringify({
+      tanggal:document.getElementById("tanggal").value,
+      petugas:petugas
+    })
+  })
+  .then(()=>{
+    status.innerText="✅ Berhasil dikirim";
+  })
+  .catch(()=>{
+    status.innerText="❌ Gagal";
+  });
+}
+</script>
+
+</body>
+</html>
